@@ -222,7 +222,7 @@ const server = http.createServer(async (req, res) => {
     if (path.includes("..")) return send(res, 400, { error: "Bad path" });
     const file = await readFile(join(PUBLIC, path)).catch(() => null);
     if (!file) { res.writeHead(404, { "Content-Type": "text/plain" }); return res.end("Not found"); }
-    res.writeHead(200, { "Content-Type": TYPES[extname(path)] || "application/octet-stream", "Cache-Control": "public, max-age=300" });
+    res.writeHead(200, { "Content-Type": TYPES[extname(path)] || "application/octet-stream", "Cache-Control": extname(path) === ".html" ? "no-cache" : "public, max-age=300" });
     res.end(file);
   } catch (e) {
     if (!e.status) console.error(e);
