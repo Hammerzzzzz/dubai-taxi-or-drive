@@ -2,238 +2,362 @@
 <html lang="en">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f2f2f7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
 <title>Dubai Taxi or Drive</title>
 <meta name="description" content="Is it cheaper to take a taxi or drive in Dubai? Real routes from Google Maps, Salik tolls, fuel prices and RTA fares.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
 <style>
-/* Layout: two-column tool. Trip inputs on the left, a sticky verdict + breakdown on the right; stacks on phones. */
+/* Layout: grouped inset lists on a system-grey ground. Inputs on the left, a sticky summary card on the right; one column on phones. */
 :root {
-  --bg: #f3f5f3;
-  --surface: #ffffff;
-  --ink: #12201d;
-  --muted: #5b6b67;
-  --line: #dde3e0;
-  --taxi: #0d7a68;       /* EV taxi teal */
-  --taxi-soft: #dff1ec;
-  --drive: #c27612;      /* fuel amber */
-  --drive-soft: #f8ecd9;
-  --chip: #e9eeec;
-  --font-display: "Sora", "Avenir Next", system-ui, sans-serif;
-  --font-body: "IBM Plex Sans", system-ui, -apple-system, sans-serif;
-  --font-data: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+  --bg: #f2f2f7;            /* grouped background */
+  --surface: #ffffff;       /* cell */
+  --fill: rgba(118,118,128,.12);
+  --fill-2: rgba(118,118,128,.08);
+  --ink: #000000;
+  --muted: rgba(60,60,67,.6);
+  --tertiary: rgba(60,60,67,.3);
+  --line: rgba(60,60,67,.18);
+  --blue: #007aff;
+  --taxi: #34c759;          /* electric green */
+  --drive: #ff9500;         /* fuel orange */
+  --red: #ff3b30;
+  --chip: rgba(118,118,128,.12);
+  --taxi-tint: rgba(52,199,89,.12);
+  --drive-tint: rgba(255,149,0,.12);
+  --bar: rgba(242,242,247,.72);
+  --shadow: 0 1px 2px rgba(0,0,0,.04), 0 8px 24px rgba(0,0,0,.06);
+  --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", "Helvetica Neue", Arial, sans-serif;
+  --font-display: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", "Helvetica Neue", Arial, sans-serif;
+  --r: 12px;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #0e1513; --surface: #16201d; --ink: #e6eeeb; --muted: #94a5a0; --line: #26332f;
-    --taxi: #3cc3a8; --taxi-soft: #133a32; --drive: #f0a640; --drive-soft: #3a2a12; --chip: #1f2b28;
-    color-scheme: dark;
+    --bg: #000000; --surface: #1c1c1e; --fill: rgba(118,118,128,.24); --fill-2: rgba(118,118,128,.16);
+    --ink: #ffffff; --muted: rgba(235,235,245,.6); --tertiary: rgba(235,235,245,.3); --line: rgba(84,84,88,.6);
+    --blue: #0a84ff; --taxi: #30d158; --drive: #ff9f0a; --red: #ff453a; --chip: rgba(118,118,128,.24);
+    --taxi-tint: rgba(48,209,88,.16); --drive-tint: rgba(255,159,10,.16); --bar: rgba(0,0,0,.72);
+    --shadow: none; color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
-  --bg: #0e1513; --surface: #16201d; --ink: #e6eeeb; --muted: #94a5a0; --line: #26332f;
-  --taxi: #3cc3a8; --taxi-soft: #133a32; --drive: #f0a640; --drive-soft: #3a2a12; --chip: #1f2b28;
-  color-scheme: dark;
+  --bg: #000000; --surface: #1c1c1e; --fill: rgba(118,118,128,.24); --fill-2: rgba(118,118,128,.16);
+  --ink: #ffffff; --muted: rgba(235,235,245,.6); --tertiary: rgba(235,235,245,.3); --line: rgba(84,84,88,.6);
+  --blue: #0a84ff; --taxi: #30d158; --drive: #ff9f0a; --red: #ff453a; --chip: rgba(118,118,128,.24);
+  --taxi-tint: rgba(48,209,88,.16); --drive-tint: rgba(255,159,10,.16); --bar: rgba(0,0,0,.72);
+  --shadow: none; color-scheme: dark;
 }
+
 * { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
 body {
-  background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 15px; line-height: 1.5;
-  padding-left: max(16px, env(safe-area-inset-left, 0px));
-  padding-right: max(16px, env(safe-area-inset-right, 0px));
-  padding-block: 28px 48px;
+  margin: 0; background: var(--bg); color: var(--ink);
+  font: 400 17px/1.35 var(--font); letter-spacing: -0.022em;
+  -webkit-font-smoothing: antialiased;
+  padding-bottom: max(48px, env(safe-area-inset-bottom, 0px));
 }
-.wrap { max-width: 1120px; margin: 0 auto; display: grid; gap: 24px; }
-header h1 { font-family: var(--font-display); font-size: clamp(26px, 4vw, 36px); margin: 0; letter-spacing: -0.02em; text-wrap: balance; }
-header p { margin: 6px 0 0; color: var(--muted); max-width: 62ch; }
-.grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 420px); gap: 24px; align-items: start; }
-@media (max-width: 860px) { .grid { grid-template-columns: minmax(0, 1fr); } }
+.gutter { padding-left: max(20px, env(safe-area-inset-left, 0px)); padding-right: max(20px, env(safe-area-inset-right, 0px)); }
+button, input, select { font: inherit; letter-spacing: inherit; color: inherit; }
+:focus-visible { outline: 3px solid color-mix(in srgb, var(--blue) 55%, transparent); outline-offset: 2px; border-radius: 8px; }
 
-section.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 20px; display: grid; gap: 16px; min-width: 0; }
-.inputs { display: grid; gap: 16px; min-width: 0; }
-h2 { font-family: var(--font-display); font-size: 16px; margin: 0; display: flex; align-items: center; gap: 10px; }
-h2 .tag { font-family: var(--font-body); font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
-.row { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; }
-label { display: grid; gap: 5px; font-size: 12px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); min-width: 0; }
-label .hint { text-transform: none; letter-spacing: 0; font-weight: 400; }
-.route { display: grid; gap: 10px; }
-.ghost { font: 500 14px var(--font-body); background: var(--chip); color: var(--ink); border: 0; border-radius: 9px; padding: 9px 14px; cursor: pointer; }
-.routebar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
-.primary { font: 600 14px var(--font-body); background: var(--taxi); color: var(--surface); border: 0; border-radius: 9px; padding: 9px 16px; cursor: pointer; }
-.primary:disabled { opacity: .6; cursor: progress; }
-.status { font-size: 13px; color: var(--muted); min-width: 0; }
+/* Translucent bar */
+.bar {
+  position: sticky; top: 0; z-index: 10;
+  background: var(--bar); backdrop-filter: saturate(180%) blur(20px); -webkit-backdrop-filter: saturate(180%) blur(20px);
+  border-bottom: .5px solid var(--line);
+  padding-top: env(safe-area-inset-top, 0px);
+}
+.bar-inner { max-width: 1080px; margin: 0 auto; height: 52px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.bar-title { font-weight: 600; font-size: 17px; }
+.bar-pill { font-size: 15px; font-weight: 600; padding: 6px 12px; border-radius: 999px; background: var(--fill); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.bar-pill.taxi { background: var(--taxi-tint); color: var(--taxi); }
+.bar-pill.drive { background: var(--drive-tint); color: var(--drive); }
+
+.wrap { max-width: 1080px; margin: 0 auto; }
+header.hero { padding-block: 28px 8px; }
+header.hero h1 { font-family: var(--font-display); font-size: clamp(34px, 5vw, 48px); line-height: 1.08; font-weight: 700; letter-spacing: -0.035em; margin: 0; text-wrap: balance; }
+header.hero p { margin: 10px 0 0; color: var(--muted); font-size: 19px; line-height: 1.4; max-width: 46ch; letter-spacing: -0.02em; }
+
+.grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 400px); gap: 28px; align-items: start; padding-top: 20px; }
+@media (max-width: 880px) { .grid { grid-template-columns: minmax(0, 1fr); gap: 8px; } }
+.col { display: grid; gap: 28px; min-width: 0; }
+
+/* Grouped inset list */
+.group { display: grid; gap: 7px; min-width: 0; }
+.group > h2 { margin: 0 0 0 16px; font-size: 13px; font-weight: 400; text-transform: uppercase; letter-spacing: .02em; color: var(--muted); display: flex; align-items: center; gap: 7px; }
+.group > .foot { margin: 0 16px; font-size: 13px; color: var(--muted); line-height: 1.4; letter-spacing: -0.005em; }
+.list { background: var(--surface); border-radius: var(--r); overflow: hidden; box-shadow: var(--shadow); }
+.row { display: flex; align-items: center; gap: 12px; min-height: 48px; padding: 6px 16px; position: relative; }
+.row + .row::before { content: ""; position: absolute; top: 0; left: 16px; right: 0; border-top: .5px solid var(--line); }
+.row.indent + .row::before, .row + .row.indent::before { left: 52px; }
+.row > .lbl { flex: 1 1 auto; min-width: 0; }
+.row > .lbl small { display: block; font-size: 13px; color: var(--muted); letter-spacing: -0.005em; }
+.row .val { flex: 0 1 auto; min-width: 0; text-align: right; color: var(--muted); }
+
+/* Native-feeling controls */
+.row select {
+  appearance: none; -webkit-appearance: none; background: transparent; border: 0; color: var(--muted);
+  text-align: right; text-align-last: right; padding: 8px 20px 8px 0; max-width: 100%; cursor: pointer;
+  background-image: linear-gradient(45deg, transparent 50%, var(--tertiary) 50%), linear-gradient(135deg, var(--tertiary) 50%, transparent 50%);
+  background-position: calc(100% - 9px) 52%, calc(100% - 4px) 52%; background-size: 5px 5px; background-repeat: no-repeat;
+}
+.row select option { color: initial; }
+.row input[type=number], .row input[type=time] {
+  width: 7.5em; text-align: right; border: 0; background: transparent; color: var(--muted); padding: 8px 0; font-variant-numeric: tabular-nums;
+}
+.row input[type=number]:focus, .row input[type=time]:focus { color: var(--blue); outline: none; }
+.row input::placeholder { color: var(--tertiary); }
+.unit { color: var(--tertiary); font-size: 15px; margin-left: -6px; }
+
+/* Route card, Maps style */
+.route { padding: 4px 0; position: relative; }
+.route .stop { display: flex; align-items: center; gap: 14px; padding: 4px 56px 4px 16px; position: relative; }
+.route .pin { width: 12px; height: 12px; border-radius: 50%; flex: none; }
+.route .pin.a { background: var(--blue); box-shadow: 0 0 0 3px color-mix(in srgb, var(--blue) 22%, transparent); }
+.route .pin.b { background: var(--red); border-radius: 3px; }
+.route .stop + .stop::before { content: ""; position: absolute; left: 21.5px; top: -14px; height: 20px; border-left: 2px dotted var(--tertiary); }
+.route .stop + .stop::after { content: ""; position: absolute; top: 0; left: 42px; right: 0; border-top: .5px solid var(--line); }
+.route input[type=text] { flex: 1; min-width: 0; border: 0; background: transparent; padding: 12px 0; outline: none; }
+.route input[type=text]::placeholder { color: var(--tertiary); }
+.route .swap {
+  position: absolute; right: 12px; top: 50%; transform: translateY(-50%); width: 34px; height: 34px; border-radius: 50%;
+  border: 0; background: var(--fill); color: var(--blue); cursor: pointer; display: grid; place-items: center; z-index: 1;
+}
+.route .swap svg { width: 16px; height: 16px; }
+.routebar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding: 0 4px; }
+.primary {
+  border: 0; background: var(--blue); color: #fff; font-weight: 600; font-size: 17px; padding: 11px 22px; border-radius: 999px; cursor: pointer;
+  transition: transform .12s ease, opacity .2s;
+}
+.primary:active { transform: scale(.97); }
+.primary:disabled { opacity: .5; cursor: progress; }
+.status { font-size: 15px; color: var(--muted); min-width: 0; flex: 1 1 200px; }
 .status.warn { color: var(--drive); }
-.routeinfo { font-size: 13px; color: var(--muted); margin: 0; }
-.routeinfo b { color: var(--ink); font-weight: 600; }
-select, input[type=number], input[type=time], input[type=text] {
-  width: 100%; font: 500 15px var(--font-body); color: var(--ink); background: var(--bg);
-  border: 1px solid var(--line); border-radius: 9px; padding: 9px 10px; min-width: 0;
-}
-select:focus-visible, input:focus-visible, button:focus-visible, summary:focus-visible { outline: 2px solid var(--taxi); outline-offset: 2px; }
-.seg { display: flex; flex-wrap: wrap; gap: 6px; }
-.seg button {
-  font: 500 14px var(--font-body); color: var(--ink); background: var(--chip); border: 1px solid transparent;
-  border-radius: 999px; padding: 6px 13px; cursor: pointer;
-}
-.seg button[aria-pressed="true"] { background: var(--ink); color: var(--surface); }
-.check { display: flex; align-items: center; gap: 8px; text-transform: none; letter-spacing: 0; font-size: 14px; font-weight: 500; color: var(--ink); }
-.check input { width: 18px; height: 18px; accent-color: var(--taxi); }
-.note { font-size: 13px; color: var(--muted); margin: 0; }
-.routefacts { display: flex; flex-wrap: wrap; gap: 8px; }
-.fact { background: var(--chip); border-radius: 8px; padding: 6px 10px; font-size: 13px; }
-.fact b { font-family: var(--font-data); font-weight: 500; }
+.ghost { display: none; }
 
-/* Result column */
-.result { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 16px); display: grid; gap: 16px; min-width: 0; }
-@media (max-width: 860px) { .result { position: static; } }
-.verdict { border-radius: 14px; padding: 20px; display: grid; gap: 6px; border: 1px solid var(--line); }
-.verdict.taxi { background: var(--taxi-soft); }
-.verdict.drive { background: var(--drive-soft); }
-.verdict .eyebrow { font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
-.verdict .big { font-family: var(--font-display); font-size: clamp(24px, 3.4vw, 30px); font-weight: 700; line-height: 1.15; text-wrap: balance; }
+/* Segmented control */
+.seg { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; background: var(--fill); border-radius: 9px; padding: 2px; gap: 2px; width: 100%; }
+.seg button {
+  border: 0; background: transparent; border-radius: 7px; padding: 6px 10px; font-size: 14px; font-weight: 500; cursor: pointer;
+  color: var(--ink); white-space: nowrap; transition: background .2s, box-shadow .2s;
+}
+.seg button[aria-pressed="true"] { background: var(--surface); box-shadow: 0 3px 8px rgba(0,0,0,.12), 0 3px 1px rgba(0,0,0,.04); font-weight: 600; }
+:root[data-theme="dark"] .seg button[aria-pressed="true"] { background: #636366; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .seg button[aria-pressed="true"] { background: #636366; } }
+.row.segrow { padding-block: 10px; }
+.sr { position: absolute !important; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* Switch */
+.switch { position: relative; width: 51px; height: 31px; flex: none; }
+.switch input { appearance: none; -webkit-appearance: none; margin: 0; width: 51px; height: 31px; border-radius: 999px; background: var(--fill); cursor: pointer; transition: background .25s; }
+.switch input:checked { background: var(--taxi); }
+.switch input::after { content: ""; position: absolute; top: 2px; left: 2px; width: 27px; height: 27px; border-radius: 50%; background: #fff; box-shadow: 0 3px 8px rgba(0,0,0,.15), 0 3px 1px rgba(0,0,0,.06); transition: transform .25s cubic-bezier(.3,.7,.4,1); }
+.switch input:checked::after { transform: translateX(20px); }
+
+/* Chips under the route */
+.routefacts { display: flex; flex-wrap: wrap; gap: 6px; }
+.fact { background: var(--surface); border-radius: 999px; padding: 6px 12px; font-size: 13px; color: var(--muted); box-shadow: var(--shadow); letter-spacing: -0.005em; }
+.fact b { color: var(--ink); font-weight: 600; font-variant-numeric: tabular-nums; }
+.routeinfo { margin: 0 16px; font-size: 13px; color: var(--muted); line-height: 1.45; letter-spacing: -0.005em; }
+.routeinfo b { color: var(--ink); font-weight: 600; }
+.note { margin: 0; }
+
+/* Summary column */
+.result { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 68px); display: grid; gap: 16px; min-width: 0; }
+@media (max-width: 880px) { .result { position: static; order: -1; } }
+.card { background: var(--surface); border-radius: 18px; box-shadow: var(--shadow); padding: 20px; min-width: 0; }
+.verdict { display: grid; gap: 4px; background: var(--surface); border-radius: 18px; box-shadow: var(--shadow); padding: 22px 20px 20px; position: relative; overflow: hidden; }
+.verdict::before { content: ""; position: absolute; inset: 0; opacity: 1; transition: background .3s; pointer-events: none; }
+.verdict.taxi::before { background: linear-gradient(160deg, var(--taxi-tint), transparent 70%); }
+.verdict.drive::before { background: linear-gradient(160deg, var(--drive-tint), transparent 70%); }
+.verdict > * { position: relative; }
+.verdict .eyebrow { font-size: 13px; color: var(--muted); letter-spacing: -0.005em; overflow-wrap: anywhere; }
+.verdict .big { font-family: var(--font-display); font-size: 28px; line-height: 1.12; font-weight: 700; letter-spacing: -0.03em; text-wrap: balance; margin-top: 2px; }
 .verdict.taxi .big em { color: var(--taxi); font-style: normal; }
 .verdict.drive .big em { color: var(--drive); font-style: normal; }
+.verdict .note { font-size: 15px; color: var(--muted); line-height: 1.4; margin-top: 6px; letter-spacing: -0.015em; }
+
 .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-.cost { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 14px; display: grid; gap: 8px; min-width: 0; }
-.cost .who { font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; display: flex; align-items: center; gap: 6px; }
-.dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
-.cost .amt { font-family: var(--font-data); font-size: 24px; font-variant-numeric: tabular-nums; }
-.cost .amt small { font-family: var(--font-body); font-size: 12px; color: var(--muted); margin-right: 3px; }
-.cost.win { outline: 2px solid currentColor; }
-.lines { display: grid; gap: 3px; font-size: 13px; }
+.cost { background: var(--surface); border-radius: 18px; box-shadow: var(--shadow); padding: 16px; display: grid; gap: 10px; min-width: 0; align-content: start; transition: box-shadow .25s; }
+.cost.win { box-shadow: var(--shadow), inset 0 0 0 2px currentColor; }
+.cost .who { font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 6px; letter-spacing: -0.005em; }
+.dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; flex: none; }
+.cost .amt { font-family: var(--font-display); font-size: 30px; font-weight: 700; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; line-height: 1; color: var(--ink); }
+.cost .amt small { font-family: var(--font); font-size: 13px; font-weight: 500; color: var(--muted); margin-right: 4px; letter-spacing: 0; }
+.lines { display: grid; gap: 5px; font-size: 13px; letter-spacing: -0.005em; }
 .lines div { display: flex; justify-content: space-between; gap: 8px; color: var(--muted); }
-.lines div span:last-child { font-family: var(--font-data); font-variant-numeric: tabular-nums; color: var(--ink); white-space: nowrap; }
-.lines .sub { border-top: 1px dashed var(--line); padding-top: 4px; margin-top: 2px; }
-.chartbox { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 14px; display: grid; gap: 8px; }
-.chartbox h3 { margin: 0; font-size: 13px; font-weight: 600; }
+.lines div span:last-child { color: var(--ink); font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+.chartbox { display: grid; gap: 10px; }
+.chartbox h3 { margin: 0; font-size: 15px; font-weight: 600; letter-spacing: -0.015em; }
 .chartbox svg { width: 100%; height: auto; display: block; }
-.legend { display: flex; gap: 14px; font-size: 12px; color: var(--muted); flex-wrap: wrap; }
+.legend { display: flex; gap: 14px; font-size: 13px; color: var(--muted); flex-wrap: wrap; }
 .legend span { display: inline-flex; align-items: center; gap: 6px; }
 
-details { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 4px 20px; }
-details[open] { padding-bottom: 20px; }
-summary { cursor: pointer; font-family: var(--font-display); font-weight: 600; padding: 14px 0; }
-details .row { margin-top: 6px; }
-details h4 { margin: 18px 0 4px; font-size: 13px; }
-.sources { font-size: 13px; color: var(--muted); }
-.sources a { color: var(--taxi); }
-@media (prefers-reduced-motion: no-preference) { .cost, .verdict { transition: background .2s; } }
+/* Disclosure */
+details.group > summary { list-style: none; cursor: pointer; margin: 0 0 0 16px; font-size: 13px; text-transform: uppercase; letter-spacing: .02em; color: var(--muted); display: flex; align-items: center; gap: 6px; }
+details.group > summary::-webkit-details-marker { display: none; }
+details.group > summary::after { content: ""; width: 7px; height: 7px; border-right: 1.5px solid var(--blue); border-bottom: 1.5px solid var(--blue); transform: rotate(-45deg); transition: transform .2s; margin-left: 2px; }
+details[open].group > summary::after { transform: rotate(45deg); }
+details.group > summary .open-hint { text-transform: none; letter-spacing: -0.005em; color: var(--blue); font-size: 15px; margin-left: auto; margin-right: 16px; }
+details.group h4 { margin: 18px 0 7px 16px; font-size: 13px; font-weight: 400; text-transform: uppercase; letter-spacing: .02em; color: var(--muted); }
+.sources a { color: var(--blue); text-decoration: none; }
+.sources a:hover { text-decoration: underline; }
+
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+@media (max-width: 420px) { .cols { gap: 8px; } .cost { padding: 14px 12px; } .cost .amt { font-size: 26px; } }
 </style>
 
-<div class="wrap">
-  <header>
+<div class="bar gutter">
+  <div class="bar-inner">
+    <span class="bar-title">Taxi or Drive</span>
+    <span class="bar-pill" id="barPill" aria-hidden="true"></span>
+  </div>
+</div>
+
+<div class="wrap gutter">
+  <header class="hero">
     <h1>Taxi or drive?</h1>
-    <p>Compare the cost of a Dubai taxi with taking your own car, using November 2026 fuel prices, Salik's variable tolls, RTA taxi tariffs and parking. Every rate is editable under <i>Rates &amp; assumptions</i>.</p>
+    <p>See which costs less for any trip in Dubai, using live Google Maps routes, Salik tolls, this month's fuel prices and RTA fares.</p>
   </header>
 
   <div class="grid">
-    <div class="inputs">
-      <section class="panel" aria-labelledby="h-trip">
-        <h2 id="h-trip">The trip</h2>
-        <form id="routeForm" class="route" autocomplete="off">
-          <label for="from">Starting point <span class="hint">address, building, landmark, area, or a Google Maps link / coordinates</span>
-            <input type="text" id="from" list="areas" value="Dubai Marina / JLT" placeholder="e.g. Marina Gate 1, Dubai Marina">
-          </label>
-          <label for="to">Finishing point <span class="hint">same options as above</span>
-            <input type="text" id="to" list="areas" value="DIFC / Trade Centre" placeholder="e.g. Gate Village, DIFC">
-          </label>
-          <div class="routebar">
-            <button type="submit" id="findBtn" class="primary">Find route</button>
-            <button type="button" id="swap" class="ghost">⇅ Swap</button>
-            <span class="status" id="routeStatus" aria-live="polite"></span>
+    <div class="col">
+      <section class="group" aria-labelledby="h-trip">
+        <h2 id="h-trip">Trip</h2>
+        <form id="routeForm" class="list route" autocomplete="off">
+          <div class="stop">
+            <span class="pin a" aria-hidden="true"></span>
+            <label class="sr" for="from">Starting point</label>
+            <input type="text" id="from" list="areas" value="Dubai Marina / JLT" placeholder="Start: address, place or Maps link">
           </div>
+          <div class="stop">
+            <span class="pin b" aria-hidden="true"></span>
+            <label class="sr" for="to">Finishing point</label>
+            <input type="text" id="to" list="areas" value="DIFC / Trade Centre" placeholder="Destination">
+          </div>
+          <button type="button" id="swap" class="swap" aria-label="Swap start and destination" title="Swap">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 2v12M5 14l-3-3M5 14l3-3M11 14V2M11 2l-3 3M11 2l3 3"/></svg>
+          </button>
+          <button type="submit" class="sr" tabindex="-1" aria-hidden="true">Find</button>
         </form>
         <datalist id="areas"></datalist>
-        <div class="row">
-          <label for="day">Day
-            <select id="day">
+        <div class="routebar">
+          <button type="submit" form="routeForm" id="findBtn" class="primary">Find Route</button>
+          <span class="status" id="routeStatus" aria-live="polite"></span>
+        </div>
+      </section>
+
+      <section class="group" aria-labelledby="h-when">
+        <h2 id="h-when">When</h2>
+        <div class="list">
+          <div class="row segrow">
+            <div class="seg" data-seg-for="day" role="group" aria-label="Day">
+              <button type="button" data-value="wk">Weekday</button>
+              <button type="button" data-value="sat">Saturday</button>
+              <button type="button" data-value="sun">Sunday</button>
+            </div>
+            <select id="day" class="sr" tabindex="-1" aria-hidden="true">
               <option value="wk">Monday – Friday</option>
               <option value="sat">Saturday</option>
               <option value="sun">Sunday</option>
             </select>
-          </label>
-          <label for="time">Departure time <input type="time" id="time" value="08:30" step="900"></label>
-          <label for="trip">Journey
-            <select id="trip">
+          </div>
+          <div class="row">
+            <label class="lbl" for="time">Departure</label>
+            <input type="time" id="time" value="08:30" step="900">
+          </div>
+          <div class="row segrow">
+            <div class="seg" data-seg-for="trip" role="group" aria-label="Journey">
+              <button type="button" data-value="ret">Return trip</button>
+              <button type="button" data-value="one">One way</button>
+            </div>
+            <select id="trip" class="sr" tabindex="-1" aria-hidden="true">
               <option value="ret">Return trip</option>
               <option value="one">One way</option>
             </select>
-          </label>
+          </div>
         </div>
         <div class="routefacts" id="routefacts" aria-live="polite"></div>
         <p class="routeinfo" id="routeInfo"></p>
-        <div class="row">
-          <label for="distOv">Distance, km <span class="hint">leave blank to use the estimate</span><input type="number" id="distOv" min="0" step="0.5" inputmode="decimal"></label>
-          <label for="gatesOv">Salik gates each way <span class="hint">blank = estimate</span><input type="number" id="gatesOv" min="0" step="1" inputmode="numeric"></label>
-        </div>
       </section>
 
-      <section class="panel" aria-labelledby="h-car">
+      <section class="group" aria-labelledby="h-car">
         <h2 id="h-car"><span class="dot" style="background:var(--drive)"></span>Your car</h2>
-        <div class="row">
-          <label for="vehicle">Vehicle type <select id="vehicle"></select></label>
-          <label for="fuel">Fuel <select id="fuel"></select></label>
-          <label for="cons"><span id="consLabel">Consumption</span> <input type="number" id="cons" min="0" step="0.1" inputmode="decimal"></label>
+        <div class="list">
+          <div class="row"><label class="lbl" for="vehicle">Vehicle</label><select id="vehicle"></select></div>
+          <div class="row"><label class="lbl" for="fuel">Fuel</label><select id="fuel"></select></div>
+          <div class="row"><label class="lbl" for="cons" id="consLabel">Consumption</label><input type="number" id="cons" min="0" step="0.1" inputmode="decimal"></div>
+          <div class="row"><label class="lbl" for="parkRate">Parking<small>AED per hour at destination</small></label><input type="number" id="parkRate" min="0" step="0.5" inputmode="decimal"></div>
+          <div class="row"><label class="lbl" for="parkHrs">Hours parked</label><input type="number" id="parkHrs" min="0" step="0.5" value="2" inputmode="decimal"></div>
+          <div class="row"><label class="lbl" for="wear">Wear &amp; depreciation<small>Servicing, tyres and loss of value</small></label><span class="switch"><input type="checkbox" id="wear" role="switch"></span></div>
         </div>
-        <div class="row">
-          <label for="parkRate">Parking at destination, AED/hr <input type="number" id="parkRate" min="0" step="0.5" inputmode="decimal"></label>
-          <label for="parkHrs">Hours parked <input type="number" id="parkHrs" min="0" step="0.5" value="2" inputmode="decimal"></label>
-        </div>
-        <label class="check" for="wear"><input type="checkbox" id="wear"> Include wear, servicing &amp; depreciation</label>
-        <p class="note" id="parkNote"></p>
+        <p class="foot" id="parkNote"></p>
       </section>
 
-      <section class="panel" aria-labelledby="h-taxi">
-        <h2 id="h-taxi"><span class="dot" style="background:var(--taxi)"></span>The taxi</h2>
-        <div class="row">
-          <label for="taxiType">Taxi type <select id="taxiType"></select></label>
-          <label for="booking">How you get it
-            <select id="booking">
-              <option value="app">Booked by app (Careem Hala, Uber, RTA)</option>
-              <option value="street">Hailed on the street / rank</option>
+      <section class="group" aria-labelledby="h-taxi">
+        <h2 id="h-taxi"><span class="dot" style="background:var(--taxi)"></span>Taxi</h2>
+        <div class="list">
+          <div class="row"><label class="lbl" for="taxiType">Type</label><select id="taxiType"></select></div>
+          <div class="row segrow">
+            <div class="seg" data-seg-for="booking" role="group" aria-label="How you get the taxi">
+              <button type="button" data-value="app">Booked in app</button>
+              <button type="button" data-value="street">Hailed</button>
+            </div>
+            <select id="booking" class="sr" tabindex="-1" aria-hidden="true">
+              <option value="app">Booked by app</option>
+              <option value="street">Hailed on the street</option>
             </select>
-          </label>
+          </div>
         </div>
-        <p class="note" id="taxiNote"></p>
+        <p class="foot" id="taxiNote"></p>
       </section>
 
-      <details id="assump">
-        <summary>Rates &amp; assumptions</summary>
-        <h4>Fuel &amp; charging (AED)</h4>
-        <div class="row">
-          <label for="p98">Super 98 / L <input type="number" id="p98" step="0.01" value="4.16"></label>
-          <label for="p95">Special 95 / L <input type="number" id="p95" step="0.01" value="4.04"></label>
-          <label for="p91">E-Plus 91 / L <input type="number" id="p91" step="0.01" value="3.97"></label>
-          <label for="pdsl">Diesel / L <input type="number" id="pdsl" step="0.01" value="4.75"></label>
-          <label for="pHome">Home charging / kWh <input type="number" id="pHome" step="0.01" value="0.44"></label>
-          <label for="pPub">Public charger / kWh <input type="number" id="pPub" step="0.01" value="0.78"></label>
+      <section class="group" aria-labelledby="h-route-ov">
+        <h2 id="h-route-ov">Your own figures</h2>
+        <div class="list">
+          <div class="row"><label class="lbl" for="distOv">Distance<small>Leave blank to use Google Maps</small></label><input type="number" id="distOv" min="0" step="0.5" inputmode="decimal"><span class="unit">km</span></div>
+          <div class="row"><label class="lbl" for="gatesOv">Salik gates each way</label><input type="number" id="gatesOv" min="0" step="1" inputmode="numeric"></div>
         </div>
-        <h4>Salik (AED per gate, incl. VAT)</h4>
-        <div class="row">
-          <label for="sPeak">Peak <span class="hint">6–10am, 4–8pm Mon–Sat</span><input type="number" id="sPeak" step="0.1" value="6.30"></label>
-          <label for="sOff">Off-peak <span class="hint">other hours, all Sunday</span><input type="number" id="sOff" step="0.1" value="4.20"></label>
-          <label for="sNight">Night <span class="hint">1–6am</span><input type="number" id="sNight" step="0.1" value="0"></label>
+      </section>
+
+      <details id="assump" class="group">
+        <summary>Rates &amp; assumptions <span class="open-hint">Edit</span></summary>
+        <h4>Fuel &amp; charging · AED</h4>
+        <div class="list">
+          <div class="row"><label class="lbl" for="p98">Super 98</label><input type="number" id="p98" step="0.01" value="4.16"><span class="unit">/L</span></div>
+          <div class="row"><label class="lbl" for="p95">Special 95</label><input type="number" id="p95" step="0.01" value="4.04"><span class="unit">/L</span></div>
+          <div class="row"><label class="lbl" for="p91">E-Plus 91</label><input type="number" id="p91" step="0.01" value="3.97"><span class="unit">/L</span></div>
+          <div class="row"><label class="lbl" for="pdsl">Diesel</label><input type="number" id="pdsl" step="0.01" value="4.75"><span class="unit">/L</span></div>
+          <div class="row"><label class="lbl" for="pHome">Home charging</label><input type="number" id="pHome" step="0.01" value="0.44"><span class="unit">/kWh</span></div>
+          <div class="row"><label class="lbl" for="pPub">Public charger</label><input type="number" id="pPub" step="0.01" value="0.78"><span class="unit">/kWh</span></div>
         </div>
-        <h4>RTA taxi tariff (AED)</h4>
-        <div class="row">
-          <label for="tKm">Per km <input type="number" id="tKm" step="0.01" value="2.30"></label>
-          <label for="tStreetD">Street flag fall, day <input type="number" id="tStreetD" step="0.5" value="5"></label>
-          <label for="tStreetN">Street flag fall, 10pm–6am <input type="number" id="tStreetN" step="0.5" value="5.5"></label>
-          <label for="tAppD">App flag fall, day <input type="number" id="tAppD" step="0.5" value="8"></label>
-          <label for="tAppN">App flag fall, night <input type="number" id="tAppN" step="0.5" value="9"></label>
-          <label for="tPeak">Peak-hour app surcharge <input type="number" id="tPeak" step="0.5" value="4"></label>
-          <label for="tAir">Airport flag fall <input type="number" id="tAir" step="0.5" value="25"></label>
-          <label for="tMin">Minimum fare <input type="number" id="tMin" step="0.5" value="13"></label>
-          <label for="tWait">Waiting, per min <input type="number" id="tWait" step="0.05" value="0.5"></label>
+        <h4>Salik per gate · AED incl. VAT</h4>
+        <div class="list">
+          <div class="row"><label class="lbl" for="sPeak">Peak<small>6–10am and 4–8pm, Mon–Sat</small></label><input type="number" id="sPeak" step="0.1" value="6.30"></div>
+          <div class="row"><label class="lbl" for="sOff">Off-peak<small>Other hours, and all day Sunday</small></label><input type="number" id="sOff" step="0.1" value="4.20"></div>
+          <div class="row"><label class="lbl" for="sNight">Night<small>1–6am</small></label><input type="number" id="sNight" step="0.1" value="0"></div>
         </div>
-        <p class="note">Taxi peak hours are taken as 8–10am and 4–8pm on weekdays and 4pm–midnight on weekends. Average road speed drops to about 26 km/h in weekday peaks, which adds taxi waiting time and raises fuel use. Distance, traffic and the Salik gates passed come from the fastest Google Maps route at your departure time; hours other than the one you picked use the speed model. Al Maktoum Bridge is free on Sundays and 10pm–6am. If Google Maps is unavailable, distance falls back to straight-line × 1.25.</p>
-        <div class="sources">
-          <h4>Sources</h4>
-          Fuel: <a href="https://www.khaleejtimes.com/business/energy/uae-petrol-diesel-prices-november-2026-announced" target="_blank" rel="noopener">Khaleej Times, Nov 2026 prices</a> ·
-          Salik: <a href="https://gulfnews.com/living-in-uae/transport/dubai-parking-and-salik-go-up-here-is-when-to-drive-and-park-for-free-1.500559586" target="_blank" rel="noopener">Gulf News</a> ·
-          Taxi: <a href="https://www.rta.ae/wps/portal/rta/ae/home/promotion/taxi-fare" target="_blank" rel="noopener">RTA taxi fares</a>,
-          <a href="https://gulfnews.com/uae/transport/rta-revises-dubai-taxi-fares-whats-changing-for-app-users-all-you-must-know-1.500335199" target="_blank" rel="noopener">Gulf News fare revision</a>.
-          Charging and wear-and-tear figures are estimates.
+        <h4>RTA taxi tariff · AED</h4>
+        <div class="list">
+          <div class="row"><label class="lbl" for="tKm">Per km</label><input type="number" id="tKm" step="0.01" value="2.30"></div>
+          <div class="row"><label class="lbl" for="tStreetD">Street flag fall, day</label><input type="number" id="tStreetD" step="0.5" value="5"></div>
+          <div class="row"><label class="lbl" for="tStreetN">Street flag fall, 10pm–6am</label><input type="number" id="tStreetN" step="0.5" value="5.5"></div>
+          <div class="row"><label class="lbl" for="tAppD">App flag fall, day</label><input type="number" id="tAppD" step="0.5" value="8"></div>
+          <div class="row"><label class="lbl" for="tAppN">App flag fall, night</label><input type="number" id="tAppN" step="0.5" value="9"></div>
+          <div class="row"><label class="lbl" for="tPeak">Peak-hour app surcharge</label><input type="number" id="tPeak" step="0.5" value="4"></div>
+          <div class="row"><label class="lbl" for="tAir">Airport flag fall</label><input type="number" id="tAir" step="0.5" value="25"></div>
+          <div class="row"><label class="lbl" for="tMin">Minimum fare</label><input type="number" id="tMin" step="0.5" value="13"></div>
+          <div class="row"><label class="lbl" for="tWait">Waiting</label><input type="number" id="tWait" step="0.05" value="0.5"><span class="unit">/min</span></div>
         </div>
+        <p class="foot" style="margin-top:8px">Taxi peak hours are 8–10am and 4–8pm on weekdays and 4pm–midnight at weekends. Distance, traffic and the Salik gates passed come from the fastest Google Maps route at your departure time; other hours in the chart are scaled from it. Al Maktoum Bridge is free on Sundays and 10pm–6am. Without Google Maps, distance falls back to straight-line × 1.25.</p>
+        <p class="foot sources">
+          Sources: <a href="https://www.khaleejtimes.com/business/energy/uae-petrol-diesel-prices-november-2026-announced" target="_blank" rel="noopener">fuel prices</a>,
+          <a href="https://gulfnews.com/living-in-uae/transport/dubai-parking-and-salik-go-up-here-is-when-to-drive-and-park-for-free-1.500559586" target="_blank" rel="noopener">Salik</a>,
+          <a href="https://www.rta.ae/wps/portal/rta/ae/home/promotion/taxi-fare" target="_blank" rel="noopener">RTA taxi fares</a>,
+          <a href="https://gulfnews.com/uae/transport/rta-revises-dubai-taxi-fares-whats-changing-for-app-users-all-you-must-know-1.500335199" target="_blank" rel="noopener">fare revision</a>. Charging and wear figures are estimates.
+        </p>
       </details>
     </div>
 
@@ -246,24 +370,37 @@ details h4 { margin: 18px 0 4px; font-size: 13px; }
       <div class="cols">
         <div class="cost" id="cTaxi" style="color:var(--taxi)">
           <div class="who"><span class="dot" style="background:var(--taxi)"></span>Taxi</div>
-          <div class="amt" style="color:var(--ink)"><small>AED</small><span id="taxiTotal"></span></div>
+          <div class="amt"><small>AED</small><span id="taxiTotal"></span></div>
           <div class="lines" id="taxiLines"></div>
         </div>
         <div class="cost" id="cDrive" style="color:var(--drive)">
           <div class="who"><span class="dot" style="background:var(--drive)"></span>Drive</div>
-          <div class="amt" style="color:var(--ink)"><small>AED</small><span id="driveTotal"></span></div>
+          <div class="amt"><small>AED</small><span id="driveTotal"></span></div>
           <div class="lines" id="driveLines"></div>
         </div>
       </div>
-      <div class="chartbox">
-        <h3>Same trip at every hour of the day</h3>
-        <div class="legend"><span><span class="dot" style="background:var(--taxi)"></span>Taxi</span><span><span class="dot" style="background:var(--drive)"></span>Drive</span><span>Tap an hour to select it</span></div>
+      <div class="card chartbox">
+        <h3>Through the day</h3>
+        <div class="legend"><span><span class="dot" style="background:var(--taxi)"></span>Taxi</span><span><span class="dot" style="background:var(--drive)"></span>Drive</span><span>Tap an hour to choose it</span></div>
         <svg id="chart" viewBox="0 0 380 170" role="img" aria-label="Taxi and driving cost by departure hour"></svg>
       </div>
     </aside>
   </div>
 </div>
 
+<script>
+// Segmented controls drive hidden selects, so the calculator code keeps reading plain <select> values
+document.querySelectorAll(".seg[data-seg-for]").forEach(seg => {
+  const sel = document.getElementById(seg.dataset.segFor);
+  const sync = () => seg.querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.value === sel.value)));
+  seg.addEventListener("click", e => {
+    const b = e.target.closest("button"); if (!b || b.dataset.value === sel.value) return;
+    sel.value = b.dataset.value; sync();
+    sel.dispatchEvent(new Event("change", { bubbles: true }));
+  });
+  sync();
+});
+</script>
 <script>
 // ---- Places: lat, lng, side of the Creek (S/N), position along Sheikh Zayed Rd in km (null = off the SZR corridor), parking AED/hr
 const PLACES = [
@@ -632,7 +769,10 @@ function render() {
   const pct = Math.max(taxi.total, drive.total) > 0 ? Math.round(diff / Math.max(taxi.total, drive.total) * 100) : 0;
   $("vSub").textContent = diff < 1 ? "Pick whichever is more convenient." :
     `${pct}% less than ${taxiWins ? "driving" : "the taxi"}. ` +
-    (!$("wear").checked && !taxiWins ? "Fuel, tolls and parking only. Tick wear & depreciation for the full cost of running your car." : "");
+    (!$("wear").checked && !taxiWins ? "Fuel, tolls and parking only. Turn on Wear & depreciation for the full cost of running your car." : "");
+  const pill = $("barPill");
+  pill.className = "bar-pill" + (diff < 1 ? "" : taxiWins ? " taxi" : " drive");
+  pill.textContent = diff < 1 ? "About the same" : `${taxiWins ? "Taxi" : "Drive"} · save AED ${Math.round(diff)}`;
   $("cTaxi").classList.toggle("win", taxiWins && diff >= 1);
   $("cDrive").classList.toggle("win", !taxiWins && diff >= 1);
 
@@ -649,7 +789,7 @@ function drawChart(sel) {
   let g = "";
   for (let v = 0; v <= max; v += step) {
     g += `<line x1="${L}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)" stroke-width="1"/>`;
-    g += `<text x="${L - 6}" y="${y(v) + 3.5}" text-anchor="end" font-size="10" fill="var(--muted)" font-family="IBM Plex Mono, monospace">${v}</text>`;
+    g += `<text x="${L - 6}" y="${y(v) + 3.5}" text-anchor="end" font-size="10" fill="var(--muted)">${v}</text>`;
   }
   [0, 6, 12, 18, 23].forEach(h => {
     g += `<text x="${x(h)}" y="${H - 6}" text-anchor="middle" font-size="10" fill="var(--muted)">${h === 0 ? "12am" : h === 12 ? "12pm" : h === 23 ? "11pm" : h < 12 ? h + "am" : (h - 12) + "pm"}</text>`;
