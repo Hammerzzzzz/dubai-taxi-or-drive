@@ -93,7 +93,9 @@ async function google(url, body, fieldMask) {
 
 async function refineGates() {
   if (!KEY) return;
+  let failed = false;
   for (const g of GATES) {
+    if ((g.source || "").startsWith("Google")) continue;
     try {
       const d = await google("https://places.googleapis.com/v1/places:searchText",
         { textQuery: g.q + " Dubai", locationBias: { circle: { center: { latitude: g.lat, longitude: g.lng }, radius: 5000 } }, maxResultCount: 3 },
@@ -104,11 +106,13 @@ async function refineGates() {
         .filter(x => x.m < 4000).sort((a, b) => a.m - b.m)[0];
       if (near) {
         g.lat = near.p.location.latitude; g.lng = near.p.location.longitude;
-        g.source = `Google: ${near.p.displayName.text}`;
+        g.source = `Google: ${near.p.displayName.text}`; g.movedM = Math.round(near.m);
       } else g.source = "approximate";
-    } catch { g.source = "approximate"; }
+    } catch { g.source = "approximate"; failed = true; }
   }
   console.log("Salik gates:", GATES.map(g => `${g.name} ${g.lat.toFixed(4)},${g.lng.toFixed(4)} (${g.source})`).join(" | "));
+  // If Google refused (e.g. the key was still being set up), try again in 10 minutes
+  if (failed) setTimeout(refineGates, 10 * 60e3);
 }
 
 function waypoint(e) {
