@@ -1,0 +1,707 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Dubai Taxi or Drive</title>
+<meta name="description" content="Is it cheaper to take a taxi or drive in Dubai? Real routes from Google Maps, Salik tolls, fuel prices and RTA fares.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* Layout: two-column tool. Trip inputs on the left, a sticky verdict + breakdown on the right; stacks on phones. */
+:root {
+  --bg: #f3f5f3;
+  --surface: #ffffff;
+  --ink: #12201d;
+  --muted: #5b6b67;
+  --line: #dde3e0;
+  --taxi: #0d7a68;       /* EV taxi teal */
+  --taxi-soft: #dff1ec;
+  --drive: #c27612;      /* fuel amber */
+  --drive-soft: #f8ecd9;
+  --chip: #e9eeec;
+  --font-display: "Sora", "Avenir Next", system-ui, sans-serif;
+  --font-body: "IBM Plex Sans", system-ui, -apple-system, sans-serif;
+  --font-data: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0e1513; --surface: #16201d; --ink: #e6eeeb; --muted: #94a5a0; --line: #26332f;
+    --taxi: #3cc3a8; --taxi-soft: #133a32; --drive: #f0a640; --drive-soft: #3a2a12; --chip: #1f2b28;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0e1513; --surface: #16201d; --ink: #e6eeeb; --muted: #94a5a0; --line: #26332f;
+  --taxi: #3cc3a8; --taxi-soft: #133a32; --drive: #f0a640; --drive-soft: #3a2a12; --chip: #1f2b28;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 15px; line-height: 1.5;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 28px 48px;
+}
+.wrap { max-width: 1120px; margin: 0 auto; display: grid; gap: 24px; }
+header h1 { font-family: var(--font-display); font-size: clamp(26px, 4vw, 36px); margin: 0; letter-spacing: -0.02em; text-wrap: balance; }
+header p { margin: 6px 0 0; color: var(--muted); max-width: 62ch; }
+.grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 420px); gap: 24px; align-items: start; }
+@media (max-width: 860px) { .grid { grid-template-columns: minmax(0, 1fr); } }
+
+section.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 20px; display: grid; gap: 16px; min-width: 0; }
+.inputs { display: grid; gap: 16px; min-width: 0; }
+h2 { font-family: var(--font-display); font-size: 16px; margin: 0; display: flex; align-items: center; gap: 10px; }
+h2 .tag { font-family: var(--font-body); font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.row { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; }
+label { display: grid; gap: 5px; font-size: 12px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); min-width: 0; }
+label .hint { text-transform: none; letter-spacing: 0; font-weight: 400; }
+.route { display: grid; gap: 10px; }
+.ghost { font: 500 14px var(--font-body); background: var(--chip); color: var(--ink); border: 0; border-radius: 9px; padding: 9px 14px; cursor: pointer; }
+.routebar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.primary { font: 600 14px var(--font-body); background: var(--taxi); color: var(--surface); border: 0; border-radius: 9px; padding: 9px 16px; cursor: pointer; }
+.primary:disabled { opacity: .6; cursor: progress; }
+.status { font-size: 13px; color: var(--muted); min-width: 0; }
+.status.warn { color: var(--drive); }
+.routeinfo { font-size: 13px; color: var(--muted); margin: 0; }
+.routeinfo b { color: var(--ink); font-weight: 600; }
+select, input[type=number], input[type=time], input[type=text] {
+  width: 100%; font: 500 15px var(--font-body); color: var(--ink); background: var(--bg);
+  border: 1px solid var(--line); border-radius: 9px; padding: 9px 10px; min-width: 0;
+}
+select:focus-visible, input:focus-visible, button:focus-visible, summary:focus-visible { outline: 2px solid var(--taxi); outline-offset: 2px; }
+.seg { display: flex; flex-wrap: wrap; gap: 6px; }
+.seg button {
+  font: 500 14px var(--font-body); color: var(--ink); background: var(--chip); border: 1px solid transparent;
+  border-radius: 999px; padding: 6px 13px; cursor: pointer;
+}
+.seg button[aria-pressed="true"] { background: var(--ink); color: var(--surface); }
+.check { display: flex; align-items: center; gap: 8px; text-transform: none; letter-spacing: 0; font-size: 14px; font-weight: 500; color: var(--ink); }
+.check input { width: 18px; height: 18px; accent-color: var(--taxi); }
+.note { font-size: 13px; color: var(--muted); margin: 0; }
+.routefacts { display: flex; flex-wrap: wrap; gap: 8px; }
+.fact { background: var(--chip); border-radius: 8px; padding: 6px 10px; font-size: 13px; }
+.fact b { font-family: var(--font-data); font-weight: 500; }
+
+/* Result column */
+.result { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 16px); display: grid; gap: 16px; min-width: 0; }
+@media (max-width: 860px) { .result { position: static; } }
+.verdict { border-radius: 14px; padding: 20px; display: grid; gap: 6px; border: 1px solid var(--line); }
+.verdict.taxi { background: var(--taxi-soft); }
+.verdict.drive { background: var(--drive-soft); }
+.verdict .eyebrow { font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+.verdict .big { font-family: var(--font-display); font-size: clamp(24px, 3.4vw, 30px); font-weight: 700; line-height: 1.15; text-wrap: balance; }
+.verdict.taxi .big em { color: var(--taxi); font-style: normal; }
+.verdict.drive .big em { color: var(--drive); font-style: normal; }
+.cols { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.cost { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 14px; display: grid; gap: 8px; min-width: 0; }
+.cost .who { font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; display: flex; align-items: center; gap: 6px; }
+.dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
+.cost .amt { font-family: var(--font-data); font-size: 24px; font-variant-numeric: tabular-nums; }
+.cost .amt small { font-family: var(--font-body); font-size: 12px; color: var(--muted); margin-right: 3px; }
+.cost.win { outline: 2px solid currentColor; }
+.lines { display: grid; gap: 3px; font-size: 13px; }
+.lines div { display: flex; justify-content: space-between; gap: 8px; color: var(--muted); }
+.lines div span:last-child { font-family: var(--font-data); font-variant-numeric: tabular-nums; color: var(--ink); white-space: nowrap; }
+.lines .sub { border-top: 1px dashed var(--line); padding-top: 4px; margin-top: 2px; }
+.chartbox { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 14px; display: grid; gap: 8px; }
+.chartbox h3 { margin: 0; font-size: 13px; font-weight: 600; }
+.chartbox svg { width: 100%; height: auto; display: block; }
+.legend { display: flex; gap: 14px; font-size: 12px; color: var(--muted); flex-wrap: wrap; }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+
+details { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 4px 20px; }
+details[open] { padding-bottom: 20px; }
+summary { cursor: pointer; font-family: var(--font-display); font-weight: 600; padding: 14px 0; }
+details .row { margin-top: 6px; }
+details h4 { margin: 18px 0 4px; font-size: 13px; }
+.sources { font-size: 13px; color: var(--muted); }
+.sources a { color: var(--taxi); }
+@media (prefers-reduced-motion: no-preference) { .cost, .verdict { transition: background .2s; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>Taxi or drive?</h1>
+    <p>Compare the cost of a Dubai taxi with taking your own car, using November 2026 fuel prices, Salik's variable tolls, RTA taxi tariffs and parking. Every rate is editable under <i>Rates &amp; assumptions</i>.</p>
+  </header>
+
+  <div class="grid">
+    <div class="inputs">
+      <section class="panel" aria-labelledby="h-trip">
+        <h2 id="h-trip">The trip</h2>
+        <form id="routeForm" class="route" autocomplete="off">
+          <label for="from">Starting point <span class="hint">address, building, landmark, area, or a Google Maps link / coordinates</span>
+            <input type="text" id="from" list="areas" value="Dubai Marina / JLT" placeholder="e.g. Marina Gate 1, Dubai Marina">
+          </label>
+          <label for="to">Finishing point <span class="hint">same options as above</span>
+            <input type="text" id="to" list="areas" value="DIFC / Trade Centre" placeholder="e.g. Gate Village, DIFC">
+          </label>
+          <div class="routebar">
+            <button type="submit" id="findBtn" class="primary">Find route</button>
+            <button type="button" id="swap" class="ghost">⇅ Swap</button>
+            <span class="status" id="routeStatus" aria-live="polite"></span>
+          </div>
+        </form>
+        <datalist id="areas"></datalist>
+        <div class="row">
+          <label for="day">Day
+            <select id="day">
+              <option value="wk">Monday – Friday</option>
+              <option value="sat">Saturday</option>
+              <option value="sun">Sunday</option>
+            </select>
+          </label>
+          <label for="time">Departure time <input type="time" id="time" value="08:30" step="900"></label>
+          <label for="trip">Journey
+            <select id="trip">
+              <option value="ret">Return trip</option>
+              <option value="one">One way</option>
+            </select>
+          </label>
+        </div>
+        <div class="routefacts" id="routefacts" aria-live="polite"></div>
+        <p class="routeinfo" id="routeInfo"></p>
+        <div class="row">
+          <label for="distOv">Distance, km <span class="hint">leave blank to use the estimate</span><input type="number" id="distOv" min="0" step="0.5" inputmode="decimal"></label>
+          <label for="gatesOv">Salik gates each way <span class="hint">blank = estimate</span><input type="number" id="gatesOv" min="0" step="1" inputmode="numeric"></label>
+        </div>
+      </section>
+
+      <section class="panel" aria-labelledby="h-car">
+        <h2 id="h-car"><span class="dot" style="background:var(--drive)"></span>Your car</h2>
+        <div class="row">
+          <label for="vehicle">Vehicle type <select id="vehicle"></select></label>
+          <label for="fuel">Fuel <select id="fuel"></select></label>
+          <label for="cons"><span id="consLabel">Consumption</span> <input type="number" id="cons" min="0" step="0.1" inputmode="decimal"></label>
+        </div>
+        <div class="row">
+          <label for="parkRate">Parking at destination, AED/hr <input type="number" id="parkRate" min="0" step="0.5" inputmode="decimal"></label>
+          <label for="parkHrs">Hours parked <input type="number" id="parkHrs" min="0" step="0.5" value="2" inputmode="decimal"></label>
+        </div>
+        <label class="check" for="wear"><input type="checkbox" id="wear"> Include wear, servicing &amp; depreciation</label>
+        <p class="note" id="parkNote"></p>
+      </section>
+
+      <section class="panel" aria-labelledby="h-taxi">
+        <h2 id="h-taxi"><span class="dot" style="background:var(--taxi)"></span>The taxi</h2>
+        <div class="row">
+          <label for="taxiType">Taxi type <select id="taxiType"></select></label>
+          <label for="booking">How you get it
+            <select id="booking">
+              <option value="app">Booked by app (Careem Hala, Uber, RTA)</option>
+              <option value="street">Hailed on the street / rank</option>
+            </select>
+          </label>
+        </div>
+        <p class="note" id="taxiNote"></p>
+      </section>
+
+      <details id="assump">
+        <summary>Rates &amp; assumptions</summary>
+        <h4>Fuel &amp; charging (AED)</h4>
+        <div class="row">
+          <label for="p98">Super 98 / L <input type="number" id="p98" step="0.01" value="4.16"></label>
+          <label for="p95">Special 95 / L <input type="number" id="p95" step="0.01" value="4.04"></label>
+          <label for="p91">E-Plus 91 / L <input type="number" id="p91" step="0.01" value="3.97"></label>
+          <label for="pdsl">Diesel / L <input type="number" id="pdsl" step="0.01" value="4.75"></label>
+          <label for="pHome">Home charging / kWh <input type="number" id="pHome" step="0.01" value="0.44"></label>
+          <label for="pPub">Public charger / kWh <input type="number" id="pPub" step="0.01" value="0.78"></label>
+        </div>
+        <h4>Salik (AED per gate, incl. VAT)</h4>
+        <div class="row">
+          <label for="sPeak">Peak <span class="hint">6–10am, 4–8pm Mon–Sat</span><input type="number" id="sPeak" step="0.1" value="6.30"></label>
+          <label for="sOff">Off-peak <span class="hint">other hours, all Sunday</span><input type="number" id="sOff" step="0.1" value="4.20"></label>
+          <label for="sNight">Night <span class="hint">1–6am</span><input type="number" id="sNight" step="0.1" value="0"></label>
+        </div>
+        <h4>RTA taxi tariff (AED)</h4>
+        <div class="row">
+          <label for="tKm">Per km <input type="number" id="tKm" step="0.01" value="2.30"></label>
+          <label for="tStreetD">Street flag fall, day <input type="number" id="tStreetD" step="0.5" value="5"></label>
+          <label for="tStreetN">Street flag fall, 10pm–6am <input type="number" id="tStreetN" step="0.5" value="5.5"></label>
+          <label for="tAppD">App flag fall, day <input type="number" id="tAppD" step="0.5" value="8"></label>
+          <label for="tAppN">App flag fall, night <input type="number" id="tAppN" step="0.5" value="9"></label>
+          <label for="tPeak">Peak-hour app surcharge <input type="number" id="tPeak" step="0.5" value="4"></label>
+          <label for="tAir">Airport flag fall <input type="number" id="tAir" step="0.5" value="25"></label>
+          <label for="tMin">Minimum fare <input type="number" id="tMin" step="0.5" value="13"></label>
+          <label for="tWait">Waiting, per min <input type="number" id="tWait" step="0.05" value="0.5"></label>
+        </div>
+        <p class="note">Taxi peak hours are taken as 8–10am and 4–8pm on weekdays and 4pm–midnight on weekends. Average road speed drops to about 26 km/h in weekday peaks, which adds taxi waiting time and raises fuel use. Distance, traffic and the Salik gates passed come from the fastest Google Maps route at your departure time; hours other than the one you picked use the speed model. Al Maktoum Bridge is free on Sundays and 10pm–6am. If Google Maps is unavailable, distance falls back to straight-line × 1.25.</p>
+        <div class="sources">
+          <h4>Sources</h4>
+          Fuel: <a href="https://www.khaleejtimes.com/business/energy/uae-petrol-diesel-prices-november-2026-announced" target="_blank" rel="noopener">Khaleej Times, Nov 2026 prices</a> ·
+          Salik: <a href="https://gulfnews.com/living-in-uae/transport/dubai-parking-and-salik-go-up-here-is-when-to-drive-and-park-for-free-1.500559586" target="_blank" rel="noopener">Gulf News</a> ·
+          Taxi: <a href="https://www.rta.ae/wps/portal/rta/ae/home/promotion/taxi-fare" target="_blank" rel="noopener">RTA taxi fares</a>,
+          <a href="https://gulfnews.com/uae/transport/rta-revises-dubai-taxi-fares-whats-changing-for-app-users-all-you-must-know-1.500335199" target="_blank" rel="noopener">Gulf News fare revision</a>.
+          Charging and wear-and-tear figures are estimates.
+        </div>
+      </details>
+    </div>
+
+    <aside class="result" aria-live="polite">
+      <div class="verdict" id="verdict">
+        <div class="eyebrow" id="vEyebrow"></div>
+        <div class="big" id="vBig"></div>
+        <div class="note" id="vSub"></div>
+      </div>
+      <div class="cols">
+        <div class="cost" id="cTaxi" style="color:var(--taxi)">
+          <div class="who"><span class="dot" style="background:var(--taxi)"></span>Taxi</div>
+          <div class="amt" style="color:var(--ink)"><small>AED</small><span id="taxiTotal"></span></div>
+          <div class="lines" id="taxiLines"></div>
+        </div>
+        <div class="cost" id="cDrive" style="color:var(--drive)">
+          <div class="who"><span class="dot" style="background:var(--drive)"></span>Drive</div>
+          <div class="amt" style="color:var(--ink)"><small>AED</small><span id="driveTotal"></span></div>
+          <div class="lines" id="driveLines"></div>
+        </div>
+      </div>
+      <div class="chartbox">
+        <h3>Same trip at every hour of the day</h3>
+        <div class="legend"><span><span class="dot" style="background:var(--taxi)"></span>Taxi</span><span><span class="dot" style="background:var(--drive)"></span>Drive</span><span>Tap an hour to select it</span></div>
+        <svg id="chart" viewBox="0 0 380 170" role="img" aria-label="Taxi and driving cost by departure hour"></svg>
+      </div>
+    </aside>
+  </div>
+</div>
+
+<script>
+// ---- Places: lat, lng, side of the Creek (S/N), position along Sheikh Zayed Rd in km (null = off the SZR corridor), parking AED/hr
+const PLACES = [
+  { id:"marina",  name:"Dubai Marina / JLT",          lat:25.0790, lng:55.1410, side:"S", szr:12,   park:4,  pn:"RTA paid parking" },
+  { id:"palm",    name:"Palm Jumeirah",               lat:25.1124, lng:55.1390, side:"S", szr:15.5, park:0,  pn:"most hotels and malls validate" },
+  { id:"media",   name:"Media / Internet City",       lat:25.0950, lng:55.1610, side:"S", szr:15,   park:4,  pn:"RTA paid parking" },
+  { id:"moe",     name:"Mall of the Emirates / Barsha",lat:25.1181, lng:55.2006, side:"S", szr:20,   park:0,  pn:"mall parking free for the first hours" },
+  { id:"quoz",    name:"Al Quoz",                     lat:25.1380, lng:55.2300, side:"S", szr:23,   park:0,  pn:"mostly free street parking" },
+  { id:"bb",      name:"Business Bay",                lat:25.1850, lng:55.2650, side:"S", szr:27,   park:4,  pn:"RTA paid parking" },
+  { id:"down",    name:"Downtown / Dubai Mall",       lat:25.1972, lng:55.2744, side:"S", szr:28.5, park:0,  pn:"Dubai Mall: free for the first hours, then charged" },
+  { id:"difc",    name:"DIFC / Trade Centre",         lat:25.2110, lng:55.2810, side:"S", szr:30,   park:10, pn:"DIFC car parks are among the dearest in the city" },
+  { id:"jum",     name:"Jumeirah / City Walk",        lat:25.2066, lng:55.2627, side:"S", szr:30,   park:4,  pn:"RTA paid parking" },
+  { id:"bur",     name:"Bur Dubai / Karama",          lat:25.2400, lng:55.3000, side:"S", szr:33,   park:4,  pn:"RTA paid parking" },
+  { id:"deira",   name:"Deira / City Centre",         lat:25.2525, lng:55.3300, side:"N", szr:null, park:4,  pn:"RTA paid parking" },
+  { id:"dxb",     name:"DXB Airport (T1/T3)",         lat:25.2528, lng:55.3644, side:"N", szr:null, park:25, pn:"terminal short-term parking", airport:true },
+  { id:"dfc",     name:"Dubai Festival City",         lat:25.2220, lng:55.3530, side:"N", szr:null, park:0,  pn:"free mall parking" },
+  { id:"mirdif",  name:"Mirdif",                      lat:25.2200, lng:55.4200, side:"N", szr:null, park:0,  pn:"free mall parking" },
+  { id:"dso",     name:"Dubai Silicon Oasis",         lat:25.1180, lng:55.3800, side:"S", szr:null, park:0,  pn:"mostly free parking" },
+  { id:"hills",   name:"Dubai Hills",                 lat:25.1030, lng:55.2390, side:"S", szr:null, park:0,  pn:"free mall parking" },
+  { id:"ranches", name:"Arabian Ranches",             lat:25.0550, lng:55.2700, side:"S", szr:null, park:0,  pn:"free parking" },
+  { id:"jafza",   name:"Jebel Ali / JAFZA",           lat:25.0150, lng:55.0700, side:"S", szr:0,    park:0,  pn:"free parking" },
+  { id:"expo",    name:"Expo City",                   lat:24.9631, lng:55.1500, side:"S", szr:null, park:0,  pn:"free parking" },
+  { id:"dwc",     name:"Al Maktoum Airport (DWC)",    lat:24.8960, lng:55.1610, side:"S", szr:null, park:10, pn:"terminal parking", airport:true },
+  { id:"shj",     name:"Sharjah border (Al Nahda)",   lat:25.2970, lng:55.3730, side:"N", szr:null, park:2,  pn:"Sharjah paid parking", mamzar:true },
+];
+const SZR_GATES = [3, 18.5, 25.5];   // Jebel Ali, Al Barsha, Al Safa (N/S count once)
+const CREEK_EXIT = 29;               // where SZR traffic turns for a Creek crossing
+
+const VEHICLES = [
+  { id:"small",  name:"Small hatchback (petrol)",  fuel:"95",  cons:6.0,  wear:0.35 },
+  { id:"sedan",  name:"Mid-size sedan (petrol)",   fuel:"95",  cons:7.5,  wear:0.45 },
+  { id:"suv",    name:"SUV / crossover (petrol)",  fuel:"95",  cons:10.5, wear:0.60 },
+  { id:"big4x4", name:"Large 4x4 (V8 petrol)",     fuel:"98",  cons:14.5, wear:0.85 },
+  { id:"hybrid", name:"Hybrid",                    fuel:"91",  cons:4.8,  wear:0.45, hybrid:true },
+  { id:"pickup", name:"Pickup (diesel)",           fuel:"dsl", cons:9.5,  wear:0.60 },
+  { id:"ev",     name:"Electric car",              fuel:"home",cons:17,   wear:0.50, ev:true },
+];
+const FUELS = {
+  "98":  { name:"Super 98", unit:"L", key:"p98" },
+  "95":  { name:"Special 95", unit:"L", key:"p95" },
+  "91":  { name:"E-Plus 91", unit:"L", key:"p91" },
+  "dsl": { name:"Diesel", unit:"L", key:"pdsl" },
+  "home":{ name:"Home charging (DEWA)", unit:"kWh", key:"pHome" },
+  "pub": { name:"Public charger", unit:"kWh", key:"pPub" },
+};
+const TAXIS = [
+  { id:"ev",     name:"Electric taxi (default)",      flagAdd:0, perKmAdd:0,    min:0,  note:"RTA standard tariff. Dubai's taxi fleet is moving to hybrid and electric cars, charged at the same meter rate." },
+  { id:"std",    name:"Standard taxi (hybrid)",       flagAdd:0, perKmAdd:0,    min:0,  note:"RTA standard tariff, same meter as the electric taxi." },
+  { id:"ladies", name:"Ladies & families taxi",       flagAdd:3, perKmAdd:0,    min:0,  note:"Pink-roof taxis driven by women. Estimated AED 3 higher flag fall." },
+  { id:"family", name:"7-seater family taxi",         flagAdd:3, perKmAdd:0.40, min:0,  note:"Larger vans. Flag fall and per-km are estimates above the standard tariff." },
+  { id:"lux",    name:"Lux / limousine",              flagAdd:0, perKmAdd:0,    min:50, flatFlag:20, perKm:3.40, note:"Premium sedans (e.g. Lexus, Tesla). Estimated AED 20 flag fall, AED 3.40/km, AED 50 minimum." },
+];
+
+const $ = id => document.getElementById(id);
+const num = id => { const v = parseFloat($(id).value); return isFinite(v) ? v : 0; };
+const fmt = v => v.toFixed(2);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[c]));
+
+function fill(sel, items, val) {
+  sel.innerHTML = items.map(i => `<option value="${i.id}">${i.name}</option>`).join("");
+  if (val) sel.value = val;
+}
+$("areas").innerHTML = PLACES.map(p => `<option value="${p.name}"></option>`).join("");
+fill($("vehicle"), VEHICLES, "sedan");
+fill($("taxiType"), TAXIS, "ev");
+
+function fillFuel(v) {
+  const keys = v.ev ? ["home","pub"] : ["98","95","91","dsl"];
+  $("fuel").innerHTML = keys.map(k => `<option value="${k}">${FUELS[k].name}</option>`).join("");
+  $("fuel").value = v.fuel;
+  $("cons").value = v.cons;
+  $("consLabel").textContent = v.ev ? "kWh / 100 km" : "Litres / 100 km";
+}
+
+function place(id) { return PLACES.find(p => p.id === id); }
+function haversine(a, b) {
+  const R = 6371, r = x => x * Math.PI / 180;
+  const dLat = r(b.lat - a.lat), dLng = r(b.lng - a.lng);
+  const h = Math.sin(dLat/2)**2 + Math.cos(r(a.lat))*Math.cos(r(b.lat))*Math.sin(dLng/2)**2;
+  return 2 * R * Math.asin(Math.sqrt(h));
+}
+function gatesBetween(x, y) {
+  const lo = Math.min(x, y), hi = Math.max(x, y);
+  return SZR_GATES.filter(g => g > lo && g < hi).length;
+}
+function estGates(a, b) {
+  if (a.id === b.id) return 0;
+  let g = 0;
+  const onSzr = p => p.side === "S" && p.szr !== null;
+  if (onSzr(a) && onSzr(b)) g += gatesBetween(a.szr, b.szr);
+  else if (a.side !== b.side) {
+    const s = a.side === "S" ? a : b;
+    if (onSzr(s)) g += gatesBetween(s.szr, CREEK_EXIT) + 1; // SZR then a tolled Creek crossing
+    // off-corridor southern areas loop round the Creek via Ras Al Khor (toll-free)
+  }
+  const m = a.mamzar ? b : b.mamzar ? a : null;
+  if (m && (m.side === "N" || onSzr(m))) g += 1; // Al Mamzar gate on Al Ittihad Rd
+  return g;
+}
+
+// ---- Exact start / finish points
+// A point carries its own lat/lng and name, and borrows corridor/toll/parking traits from the nearest area.
+function nearestPlace(lat, lng) {
+  let best = PLACES[0], bd = Infinity;
+  for (const p of PLACES) { const d = haversine({ lat, lng }, p); if (d < bd) { bd = d; best = p; } }
+  return { place: best, km: bd };
+}
+function makePoint(lat, lng, name) {
+  const { place: p, km } = nearestPlace(lat, lng);
+  return {
+    id: "pt:" + lat.toFixed(5) + "," + lng.toFixed(5), name, lat, lng, near: p, nearKm: km,
+    side: p.side, szr: p.szr, park: p.park, pn: p.pn,
+    airport: !!p.airport && km < 3, mamzar: !!p.mamzar && km < 4,
+  };
+}
+function parseCoords(text) {
+  const t = decodeURIComponent(text);
+  let m = t.match(/!3d(-?\d+\.\d+)!4d(-?\d+\.\d+)/);           // Google Maps place pin
+  if (!m) m = t.match(/@(-?\d+\.\d+),\s*(-?\d+\.\d+)/);         // Google Maps map centre
+  if (!m) m = t.match(/(-?\d{1,2}\.\d{3,})\s*,\s*(-?\d{1,3}\.\d{3,})/); // "25.08, 55.14" or ?q=…
+  if (!m) return null;
+  const lat = parseFloat(m[1]), lng = parseFloat(m[2]);
+  if (lat < 22 || lat > 27 || lng < 51 || lng > 57) return null;   // must be in the UAE
+  return { lat, lng };
+}
+function resolveLocal(text) {
+  const s = text.trim();
+  if (!s) return null;
+  const preset = PLACES.find(p => p.name.toLowerCase() === s.toLowerCase());
+  if (preset) return { ...preset, near: preset, nearKm: 0 };
+  const c = parseCoords(s);
+  if (c) return makePoint(c.lat, c.lng, /^https?:/i.test(s) ? "Pinned location" : `${c.lat.toFixed(4)}, ${c.lng.toFixed(4)}`);
+  return null;
+}
+
+// The current route. dist/gates are null when they should be estimated from the points.
+// When Google answers, ROUTE also carries real traffic durations for the chosen departure time.
+let ROUTE = { a: resolveLocal($("from").value), b: resolveLocal($("to").value), dist: null, gates: null, gateList: null, via: null, source: "estimate" };
+
+function setStatus(msg, warn) { const el = $("routeStatus"); el.textContent = msg; el.classList.toggle("warn", !!warn); }
+
+// ---- Address suggestions from Google Places (via our server)
+const SUGGEST = new Map();   // suggestion text -> placeId
+let sessionToken = crypto.randomUUID ? crypto.randomUUID() : String(Math.random()).slice(2);
+let suggestTimer = null, suggestCtl = null;
+function presetOptions() { return PLACES.map(p => `<option value="${esc(p.name)}"></option>`).join(""); }
+function onType(e) {
+  const q = e.target.value.trim();
+  clearTimeout(suggestTimer);
+  if (q.length < 3 || resolveLocal(q) || SUGGEST.has(q)) return;
+  suggestTimer = setTimeout(async () => {
+    if (suggestCtl) suggestCtl.abort();
+    suggestCtl = new AbortController();
+    try {
+      const res = await fetch(`/api/autocomplete?q=${encodeURIComponent(q)}&session=${sessionToken}`, { signal: suggestCtl.signal });
+      if (!res.ok) return;
+      const { suggestions } = await res.json();
+      suggestions.forEach(s => SUGGEST.set(s.text, s.placeId));
+      $("areas").innerHTML = suggestions.map(s => `<option value="${esc(s.text)}"></option>`).join("") + presetOptions();
+    } catch (_) { /* typing on; suggestions are optional */ }
+  }, 250);
+}
+
+// Describe one end of the trip for the server: a place id, coordinates, or address text
+function endpointFor(text) {
+  const s = text.trim();
+  if (SUGGEST.has(s)) return { placeId: SUGGEST.get(s) };
+  const local = resolveLocal(s);
+  if (local) return { lat: local.lat, lng: local.lng };
+  return { address: /dubai|sharjah|uae|emirates/i.test(s) ? s : s + ", Dubai, UAE" };
+}
+
+// Next departure in Dubai time (UTC+4, no daylight saving) matching the chosen day type and clock time
+function nextDeparture() {
+  const [hh, mm] = ($("time").value || "08:30").split(":").map(Number);
+  const day = $("day").value;
+  const okDay = d => day === "wk" ? d >= 1 && d <= 5 : day === "sat" ? d === 6 : d === 0;
+  const nowDubai = new Date(Date.now() + 4 * 3600e3);          // fields read with getUTC* are Dubai wall-clock
+  for (let i = 0; i < 9; i++) {
+    const c = new Date(Date.UTC(nowDubai.getUTCFullYear(), nowDubai.getUTCMonth(), nowDubai.getUTCDate() + i, hh, mm));
+    if (okDay(c.getUTCDay()) && c.getTime() > nowDubai.getTime() + 5 * 60e3) return new Date(c.getTime() - 4 * 3600e3).toISOString();
+  }
+  return null;
+}
+
+let routeCtl = null;
+async function findRoute(e) {
+  if (e) e.preventDefault();
+  const fromTxt = $("from").value.trim(), toTxt = $("to").value.trim();
+  if (!fromTxt || !toTxt) { setStatus("Enter both a starting and a finishing point.", true); return; }
+  if (e) { $("distOv").value = ""; $("gatesOv").value = ""; }
+  if (routeCtl) routeCtl.abort();
+  routeCtl = new AbortController();
+  const btn = $("findBtn");
+  btn.disabled = true;
+  setStatus("Getting the route from Google Maps…");
+  try {
+    const res = await fetch("/api/route", {
+      method: "POST", headers: { "Content-Type": "application/json" }, signal: routeCtl.signal,
+      body: JSON.stringify({ from: endpointFor(fromTxt), to: endpointFor(toTxt), departAt: nextDeparture(), session: sessionToken }),
+    });
+    const r = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(r.error || "The route service didn't answer.");
+    const a = makePoint(r.start.lat, r.start.lng, SUGGEST.has(fromTxt) || !resolveLocal(fromTxt) ? fromTxt : resolveLocal(fromTxt).name);
+    const b = makePoint(r.end.lat, r.end.lng, SUGGEST.has(toTxt) || !resolveLocal(toTxt) ? toTxt : resolveLocal(toTxt).name);
+    if (a.nearKm > 80 || b.nearKm > 80) throw new Error("One of those points is outside the Dubai area. Check the address.");
+    ROUTE = {
+      a, b, dist: r.distanceKm, gates: r.gates.length, gateList: r.gates, via: r.description || null,
+      trafficMin: r.durationMin, freeMin: r.staticDurationMin, hourKey: $("day").value + "@" + $("time").value.slice(0, 2),
+      source: "google",
+    };
+    sessionToken = crypto.randomUUID ? crypto.randomUUID() : String(Math.random()).slice(2);
+    setStatus("Route from Google Maps.");
+  } catch (err) {
+    if (err.name === "AbortError") return;
+    const a = resolveLocal(fromTxt), b = resolveLocal(toTxt);
+    if (a && b) {
+      ROUTE = { a, b, dist: null, gates: null, gateList: null, via: null, source: "estimate" };
+      setStatus(`${err.message} Using a straight-line estimate instead.`, true);
+    } else {
+      setStatus(`${err.message} You can also pick an area from the list or paste coordinates.`, true);
+      return;
+    }
+  } finally { btn.disabled = false; }
+  afterRoute();
+}
+function afterRoute() { $("parkRate").value = ROUTE.b.park; render(); }
+
+// Salik charge for one gate at a given time. Al Maktoum Bridge is free on Sundays and 10pm–6am.
+function gateCharge(gate, day, h, base) {
+  if (gate && gate.id === "maktoum" && (day === "sun" || h >= 22 || h < 6)) return 0;
+  return base;
+}
+
+// ---- Time of day model
+function conditions(day, h) {
+  const weekday = day === "wk";
+  const weekdayPeak = weekday && ((h >= 7 && h < 10) || (h >= 16 && h < 20));
+  const weekendBusy = !weekday && h >= 16;
+  const night = h >= 22 || h < 6;
+  const speed = weekdayPeak ? 26 : (h >= 1 && h < 6) ? 65 : night ? 55 : weekendBusy ? 36 : 44;
+  const taxiPeak = weekday ? ((h >= 8 && h < 10) || (h >= 16 && h < 20)) : h >= 16;
+  let salik;
+  if (h >= 1 && h < 6) salik = num("sNight");
+  else if (day !== "sun" && ((h >= 6 && h < 10) || (h >= 16 && h < 20))) salik = num("sPeak");
+  else salik = num("sOff");
+  const label = (h >= 1 && h < 6) ? "Late night, free-flowing roads" : weekdayPeak ? "Weekday rush hour" : weekendBusy ? "Busy weekend evening" : night ? "Night" : "Daytime, moderate traffic";
+  return { speed, taxiPeak, night, salik, label, salikBand: salik === num("sPeak") && salik > 0 ? "peak" : salik === 0 ? "free" : "off-peak" };
+}
+
+function calc(h) {
+  const { a, b } = ROUTE;
+  const day = $("day").value;
+  const legs = $("trip").value === "ret" ? 2 : 1;
+  const estDist = ROUTE.dist != null ? ROUTE.dist : Math.max(0.5, haversine(a, b) * 1.25);
+  const estG = ROUTE.gates != null ? ROUTE.gates : estGates(a, b);
+  const dist = $("distOv").value !== "" ? num("distOv") : estDist;
+  const gates = $("gatesOv").value !== "" ? Math.round(num("gatesOv")) : estG;
+  const c = conditions(day, h);
+  // Google's traffic-aware times apply at the hour it was asked about; other hours use the speed model
+  const live = ROUTE.source === "google" && ROUTE.hourKey === day + "@" + String(h).padStart(2, "0") && $("distOv").value === "";
+  const mins = live ? ROUTE.trafficMin : dist / c.speed * 60;
+  const freeMins = live ? Math.min(ROUTE.freeMin, mins) : dist / 65 * 60;
+  const waitMins = Math.max(0, mins - freeMins) * 0.5; // about half the extra time is crawling below the meter's speed threshold
+  const congestion = live ? Math.max(0, 1 - freeMins / mins) : Math.max(0, 1 - c.speed / 65);
+  const useList = ROUTE.gateList && $("gatesOv").value === "";
+  const tolls = useList ? ROUTE.gateList.reduce((s, g) => s + gateCharge(g, day, h, c.salik), 0) : gates * c.salik;
+
+  // Taxi
+  const t = TAXIS.find(x => x.id === $("taxiType").value);
+  const app = $("booking").value === "app";
+  let flag = app ? (c.night ? num("tAppN") : num("tAppD")) : (c.night ? num("tStreetN") : num("tStreetD"));
+  let peakAdd = app && c.taxiPeak ? num("tPeak") : 0;
+  if (t.flatFlag != null) { flag = t.flatFlag; peakAdd = app && c.taxiPeak ? num("tPeak") : 0; }
+  else flag += t.flagAdd;
+  const airportOut = a.airport && !t.flatFlag ? Math.max(0, num("tAir") - flag) : 0;
+  const airportBack = b.airport && !t.flatFlag ? Math.max(0, num("tAir") - flag) : 0;
+  const perKm = t.perKm != null ? t.perKm : num("tKm") + t.perKmAdd;
+  const minFare = Math.max(num("tMin"), t.min);
+  const legFare = (air) => {
+    const meter = flag + peakAdd + air + perKm * dist + waitMins * num("tWait");
+    return { meter, fare: Math.max(minFare, meter) };
+  };
+  const out = legFare(airportOut), back = legFare(airportBack);
+  const fares = out.fare + (legs === 2 ? back.fare : 0);
+  const taxi = {
+    flag: (flag + peakAdd) * legs + airportOut + (legs === 2 ? airportBack : 0),
+    distance: perKm * dist * legs,
+    wait: waitMins * num("tWait") * legs,
+    minTop: fares - (out.meter + (legs === 2 ? back.meter : 0)),
+    tolls: tolls * legs,
+  };
+  taxi.total = fares + taxi.tolls;
+
+  // Drive
+  const v = VEHICLES.find(x => x.id === $("vehicle").value);
+  const fuelKey = $("fuel").value, f = FUELS[fuelKey];
+  const cons = num("cons");
+  const penalty = v.ev || v.hybrid ? 0.06 : 0.35; // stop-start traffic hurts petrol/diesel much more than EVs/hybrids
+  const units = dist * cons / 100 * (1 + penalty * congestion) * legs;
+  const energy = units * num(f.key);
+  const parking = num("parkRate") * num("parkHrs");
+  const wear = $("wear").checked ? v.wear * dist * legs : 0;
+  const drive = { energy, units, unit: f.unit, fuelName: f.name, tolls: tolls * legs, parking, wear };
+  drive.total = energy + drive.tolls + parking + wear;
+
+  return { a, b, dist, estDist, estG, gates, c, mins, live, tolls, legs, taxi, drive, t, app, peakAdd };
+}
+
+function lines(rows) {
+  return rows.filter(r => r[2] !== false).map(r => `<div class="${r[3]||""}"><span>${r[0]}</span><span>${r[1]}</span></div>`).join("");
+}
+
+function render() {
+  const [hh, mm] = ($("time").value || "08:30").split(":").map(Number);
+  const r = calc(hh);
+  const { taxi, drive, c } = r;
+
+  $("routefacts").innerHTML = `
+    <span class="fact">Distance <b>${r.dist.toFixed(1)} km</b>${$("distOv").value !== "" ? "" : ROUTE.source === "google" ? " Google" : " est."}</span>
+    <span class="fact">Drive time <b>~${Math.round(r.mins)} min</b>${r.live ? " in traffic" : ""}</span>
+    <span class="fact">Salik <b>${r.gates} gate${r.gates === 1 ? "" : "s"}</b> = AED ${fmt(r.tolls)} (${c.salikBand})</span>
+    <span class="fact">${c.label}</span>`;
+  $("distOv").placeholder = r.estDist.toFixed(1);
+  $("gatesOv").placeholder = r.estG;
+  const nearTxt = p => p.near && p.near !== p && p.nearKm > 0.3 ? ` (near ${p.near.name})` : "";
+  let info = `<b>${esc(r.a.name)}</b>${esc(nearTxt(r.a))} → <b>${esc(r.b.name)}</b>${esc(nearTxt(r.b))}. `;
+  info += ROUTE.source === "google"
+    ? `Fastest route from Google Maps${ROUTE.via ? " via " + esc(ROUTE.via) : ""}. Salik gates on the route: ${ROUTE.gateList.length ? esc(ROUTE.gateList.map(g => g.name).join(", ")) : "none"}.` +
+      (r.live ? "" : " Drive time at this hour is modelled; press Find route for Google's traffic estimate.")
+    : `Distance is straight-line × 1.25; tolls estimated from the Sheikh Zayed Road corridor.`;
+  $("routeInfo").innerHTML = info;
+  $("parkNote").textContent = `Parking preset near ${r.b.near ? r.b.near.name : r.b.name}: ${r.b.pn}.`;
+  $("taxiNote").textContent = r.t.note + (r.peakAdd ? ` Peak-hour app surcharge applies at this time.` : "") + (r.a.airport ? " Airport pickups start at a higher flag fall." : "");
+
+  const legsTxt = r.legs === 2 ? " ×2" : "";
+  $("taxiTotal").textContent = fmt(taxi.total);
+  $("taxiLines").innerHTML = lines([
+    ["Flag fall" + (r.peakAdd ? " + peak" : ""), fmt(taxi.flag)],
+    [`Meter ${r.dist.toFixed(1)} km${legsTxt}`, fmt(taxi.distance)],
+    ["Traffic waiting", fmt(taxi.wait), taxi.wait > 0.005],
+    ["Minimum fare top-up", fmt(taxi.minTop), taxi.minTop > 0.005],
+    [`Salik${legsTxt}`, fmt(taxi.tolls)],
+  ]);
+  $("driveTotal").textContent = fmt(drive.total);
+  $("driveLines").innerHTML = lines([
+    [`${drive.fuelName} ${drive.units.toFixed(1)} ${drive.unit}`, fmt(drive.energy)],
+    [`Salik${legsTxt}`, fmt(drive.tolls)],
+    [`Parking ${num("parkHrs")} h`, fmt(drive.parking)],
+    ["Wear & depreciation", fmt(drive.wear), drive.wear > 0],
+  ]);
+
+  const diff = Math.abs(taxi.total - drive.total);
+  const taxiWins = taxi.total < drive.total;
+  const v = $("verdict");
+  v.className = "verdict " + (taxiWins ? "taxi" : "drive");
+  $("vEyebrow").textContent = `${r.a.name} → ${r.b.name}${r.legs === 2 ? " and back" : ""}`;  if (diff < 1) {
+    $("vBig").innerHTML = `It's <em>a tie</em>: within AED 1`;
+  } else {
+    $("vBig").innerHTML = taxiWins
+      ? `Take the <em>taxi</em>. It's AED ${fmt(diff)} cheaper`
+      : `<em>Drive</em>. It's AED ${fmt(diff)} cheaper`;
+  }
+  const pct = Math.max(taxi.total, drive.total) > 0 ? Math.round(diff / Math.max(taxi.total, drive.total) * 100) : 0;
+  $("vSub").textContent = diff < 1 ? "Pick whichever is more convenient." :
+    `${pct}% less than ${taxiWins ? "driving" : "the taxi"}. ` +
+    (!$("wear").checked && !taxiWins ? "Fuel, tolls and parking only. Tick wear & depreciation for the full cost of running your car." : "");
+  $("cTaxi").classList.toggle("win", taxiWins && diff >= 1);
+  $("cDrive").classList.toggle("win", !taxiWins && diff >= 1);
+
+  drawChart(hh);
+}
+
+function drawChart(sel) {
+  const W = 380, H = 170, L = 34, R = 8, T = 10, B = 24;
+  const data = Array.from({ length: 24 }, (_, h) => { const r = calc(h); return { h, t: r.taxi.total, d: r.drive.total }; });
+  const max = Math.max(...data.map(p => Math.max(p.t, p.d))) * 1.1 || 1;
+  const step = max > 200 ? 50 : max > 80 ? 20 : max > 40 ? 10 : 5;
+  const x = h => L + (W - L - R) * h / 23;
+  const y = v => T + (H - T - B) * (1 - v / max);
+  let g = "";
+  for (let v = 0; v <= max; v += step) {
+    g += `<line x1="${L}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)" stroke-width="1"/>`;
+    g += `<text x="${L - 6}" y="${y(v) + 3.5}" text-anchor="end" font-size="10" fill="var(--muted)" font-family="IBM Plex Mono, monospace">${v}</text>`;
+  }
+  [0, 6, 12, 18, 23].forEach(h => {
+    g += `<text x="${x(h)}" y="${H - 6}" text-anchor="middle" font-size="10" fill="var(--muted)">${h === 0 ? "12am" : h === 12 ? "12pm" : h === 23 ? "11pm" : h < 12 ? h + "am" : (h - 12) + "pm"}</text>`;
+  });
+  g += `<rect x="${x(sel) - 6}" y="${T}" width="12" height="${H - T - B}" rx="3" fill="var(--chip)"/>`;
+  const path = k => data.map((p, i) => `${i ? "L" : "M"}${x(p.h).toFixed(1)},${y(p[k]).toFixed(1)}`).join("");
+  g += `<path d="${path("d")}" fill="none" stroke="var(--drive)" stroke-width="2.2" stroke-linejoin="round"/>`;
+  g += `<path d="${path("t")}" fill="none" stroke="var(--taxi)" stroke-width="2.2" stroke-linejoin="round"/>`;
+  const s = data[sel];
+  g += `<circle cx="${x(sel)}" cy="${y(s.d)}" r="4" fill="var(--drive)" stroke="var(--surface)" stroke-width="1.5"/>`;
+  g += `<circle cx="${x(sel)}" cy="${y(s.t)}" r="4" fill="var(--taxi)" stroke="var(--surface)" stroke-width="1.5"/>`;
+  for (let h = 0; h < 24; h++) {
+    g += `<rect data-h="${h}" x="${x(h) - (W - L - R) / 46}" y="${T}" width="${(W - L - R) / 23}" height="${H - T - B}" fill="transparent" style="cursor:pointer"><title>${String(h).padStart(2,"0")}:00 · taxi AED ${fmt(data[h].t)} · drive AED ${fmt(data[h].d)}</title></rect>`;
+  }
+  $("chart").innerHTML = g;
+}
+$("chart").addEventListener("click", e => {
+  const h = e.target.getAttribute && e.target.getAttribute("data-h");
+  if (h != null) { $("time").value = String(h).padStart(2, "0") + ":00"; render(); }
+});
+
+// ---- Wiring
+function onVehicle() { fillFuel(VEHICLES.find(v => v.id === $("vehicle").value)); render(); }
+$("vehicle").addEventListener("change", onVehicle);
+$("routeForm").addEventListener("submit", findRoute);
+// Picking an area from the suggestions resolves at once, no button press needed
+["from", "to"].forEach(id => {
+  $(id).addEventListener("input", onType);
+  // Picking a suggestion or an area fetches the route at once
+  $(id).addEventListener("change", () => {
+    const f = $("from").value.trim(), t = $("to").value.trim();
+    const known = s => SUGGEST.has(s) || resolveLocal(s);
+    if (known(f) && known(t)) findRoute({ preventDefault() {} });
+    else setStatus("Press Find route to look up this address.");
+  });
+});
+$("swap").addEventListener("click", () => {
+  const f = $("from").value; $("from").value = $("to").value; $("to").value = f;
+  findRoute({ preventDefault() {} });
+});
+// A new day or time asks Google again for traffic at that hour (results are cached on the server)
+let timeTimer = null;
+["day", "time"].forEach(id => $(id).addEventListener("change", () => {
+  clearTimeout(timeTimer);
+  if (ROUTE.source === "google") timeTimer = setTimeout(() => findRoute(), 500);
+}));
+document.querySelectorAll("input, select").forEach(el => {
+  if (["vehicle", "to", "from"].includes(el.id)) return;
+  el.addEventListener("input", render);
+  el.addEventListener("change", render);
+});
+$("areas").innerHTML = presetOptions();
+fillFuel(VEHICLES.find(v => v.id === "sedan"));
+$("parkRate").value = ROUTE.b.park;
+render();
+findRoute();
+</script>
