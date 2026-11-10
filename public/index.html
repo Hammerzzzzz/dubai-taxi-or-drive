@@ -525,8 +525,10 @@ function calc(h) {
   const c = conditions(day, h);
   // Google's traffic-aware times apply at the hour it was asked about; other hours use the speed model
   const live = ROUTE.source === "google" && ROUTE.hourKey === day + "@" + String(h).padStart(2, "0") && $("distOv").value === "";
-  const mins = live ? ROUTE.trafficMin : dist / c.speed * 60;
-  const freeMins = live ? Math.min(ROUTE.freeMin, mins) : dist / 65 * 60;
+  // Other hours on a Google route: scale Google's free-flow time by how busy that hour is, so the chart lines up with the live hour
+  const calibrated = ROUTE.source === "google" && !live && $("distOv").value === "";
+  const mins = live ? ROUTE.trafficMin : calibrated ? ROUTE.freeMin * Math.pow(65 / c.speed, 0.4) : dist / c.speed * 60;
+  const freeMins = live || calibrated ? Math.min(ROUTE.freeMin, mins) : dist / 65 * 60;
   const waitMins = Math.max(0, mins - freeMins) * 0.5; // about half the extra time is crawling below the meter's speed threshold
   const congestion = live ? Math.max(0, 1 - freeMins / mins) : Math.max(0, 1 - c.speed / 65);
   const useList = ROUTE.gateList && $("gatesOv").value === "";
