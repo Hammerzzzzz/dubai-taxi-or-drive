@@ -2,6 +2,17 @@
 
 Works out whether a trip in Dubai is cheaper by taxi (electric by default) or by driving your own car.
 
+**[Try it → dubai-taxi-or-drive.onrender.com](https://dubai-taxi-or-drive.onrender.com)** · [![Smoke test](https://github.com/Hammerzzzzz/dubai-taxi-or-drive/actions/workflows/smoke-test.yml/badge.svg)](https://github.com/Hammerzzzzz/dubai-taxi-or-drive/actions/workflows/smoke-test.yml)
+
+## Why I built it
+
+"Should I just get a taxi?" is a question people in Dubai ask almost every day. The answer depends on Salik tolls, peak fares, parking and fuel, and nobody works that out properly. I wanted a quick, honest answer for a real trip at a real time of day.
+
+- **Audience:** Dubai residents and visitors deciding how to get somewhere.
+- **Approach:** live Google routes and traffic, Salik gates detected along the actual route, the current RTA tariff, and UAE fuel prices. Every assumption can be edited on the page, so the answer is transparent rather than a black box.
+- **What I'd measure:** trips calculated, how often taxi wins versus car, and which assumptions people change most.
+- **What I learned:** a useful tool lives or dies on the edge cases: night fares, airport starts, free Salik hours and minimum fares. It also needs to cost almost nothing to run, so results are cached and lookups are rate-limited.
+
 - **Route:** exact start and finish points with address search. Distance and traffic-aware drive time come from the Google Maps Routes API for your departure time.
 - **Salik:** gates are found by checking the Google route line against each gate's position. They are priced with the variable rates (AED 6.30 peak, 4.20 off-peak, free 1–6am). Al Maktoum Bridge is free on Sundays and from 10pm to 6am.
 - **Taxi:** RTA tariff, day and night starting fares, peak app surcharge, airport starting fare, waiting time and minimum fare. You can pick from five taxi types.

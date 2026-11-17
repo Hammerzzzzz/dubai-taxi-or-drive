@@ -1,0 +1,26 @@
+name: Smoke test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Start the server without a Google key
+        run: |
+          PORT=3000 node server.js > server.log 2>&1 &
+          for i in $(seq 1 20); do curl -sf http://localhost:3000/api/health && break; sleep 1; done
+      - name: Page loads
+        run: curl -sf http://localhost:3000/ | grep -qi "taxi"
+      - name: Health check lists the Salik gates
+        run: curl -sf http://localhost:3000/api/health | grep -q '"gates":\[{'
+      - name: Server log
+        if: always()
+        run: cat server.log
