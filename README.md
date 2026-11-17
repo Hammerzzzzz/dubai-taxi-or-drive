@@ -4,7 +4,7 @@ Works out whether a trip in Dubai is cheaper by taxi (electric by default) or by
 
 **[Try it → dubai-taxi-or-drive.onrender.com](https://dubai-taxi-or-drive.onrender.com)** · [![Smoke test](https://github.com/Hammerzzzzz/dubai-taxi-or-drive/actions/workflows/smoke-test.yml/badge.svg)](https://github.com/Hammerzzzzz/dubai-taxi-or-drive/actions/workflows/smoke-test.yml)
 
-![Taxi or Drive comparing a Dubai Marina to DIFC trip by taxi and by car](docs/screenshot.jpg)
+![Taxi or Drive demo: the taxi and car costs update as the trip changes from a weekday return to a late-night Sunday one-way](docs/demo.gif)
 
 ## Why I built it
 
