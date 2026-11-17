@@ -4,6 +4,8 @@ Works out whether a trip in Dubai is cheaper by taxi (electric by default) or by
 
 **[Try it → dubai-taxi-or-drive.onrender.com](https://dubai-taxi-or-drive.onrender.com)** · [![Smoke test](https://github.com/Hammerzzzzz/dubai-taxi-or-drive/actions/workflows/smoke-test.yml/badge.svg)](https://github.com/Hammerzzzzz/dubai-taxi-or-drive/actions/workflows/smoke-test.yml)
 
+![Taxi or Drive comparing a Dubai Marina to DIFC trip by taxi and by car](docs/screenshot.jpg)
+
 ## Why I built it
 
 "Should I just get a taxi?" is a question people in Dubai ask almost every day. The answer depends on Salik tolls, peak fares, parking and fuel, and nobody works that out properly. I wanted a quick, honest answer for a real trip at a real time of day.
